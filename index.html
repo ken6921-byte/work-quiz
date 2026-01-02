@@ -36,7 +36,9 @@
       box-shadow: 0 10px 25px rgba(6, 199, 85, 0.4);
       display: flex; align-items: center; gap: 10px;
       font-weight: 800; z-index: 1000; text-decoration: none;
+      transition: transform 0.2s;
     }
+    .fab-line:active { transform: scale(0.95); }
 
     .topbar{ display:flex; align-items:center; justify-content:space-between; padding-bottom: 18px; }
     .brand{ display:flex; align-items:center; gap:10px; font-weight:800; }
@@ -126,23 +128,59 @@
           <button class="btn" id="btnRestart">重測</button>
           <a href="#" id="btnLineAction" class="btn primary" style="flex:1; text-align:center;" target="_blank">求救</a>
         </div>
+        <div style="margin-top:20px; text-align:center; font-size:13px; color:#888;" id="leadEcho"></div>
       </div>
     </div>
   </div>
 
 <script>
-  // 1. 參數設定
-  const urlParams = new URLSearchParams(window.location.search);
-  const AGENT_NAME = urlParams.get('name') || "Ken";
-  const AGENT_LINE_ID = urlParams.get('line') || "ken6921";
-  const LINE_URL = `https://line.me/ti/p/~${AGENT_LINE_ID}`;
+  // ============================================
+  // 1. 強力參數讀取 (解決改ID無效問題)
+  // ============================================
+  
+  // 設定全域變數
+  var GLOBAL_NAME = "Ken";
+  var GLOBAL_LINE_ID = "ken6921";
+  var GLOBAL_LINE_URL = "https://line.me/ti/p/~ken6921";
 
-  document.getElementById("fabText").textContent = `${AGENT_NAME} 幫你健檢`;
-  document.getElementById("fabLine").href = LINE_URL;
-  document.getElementById("btnLineAction").href = LINE_URL;
-  document.getElementById("btnLineAction").textContent = `找 ${AGENT_NAME} 求救`;
+  // 等網頁載入完成後，強制執行替換
+  window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const nameParam = urlParams.get('name');
+    const lineParam = urlParams.get('line');
 
-  // 2. 題庫
+    // 如果網址有參數，就覆蓋預設值
+    if(nameParam) GLOBAL_NAME = nameParam;
+    if(lineParam) {
+      GLOBAL_LINE_ID = lineParam;
+      GLOBAL_LINE_URL = `https://line.me/ti/p/~${lineParam}`;
+    }
+
+    // 更新介面上的文字與連結
+    updateLinkUI();
+    
+    // 初始化第一題
+    render();
+  };
+
+  function updateLinkUI() {
+    // 浮動按鈕
+    const fabText = document.getElementById("fabText");
+    const fabLine = document.getElementById("fabLine");
+    if(fabText) fabText.textContent = `${GLOBAL_NAME} 幫你健檢`;
+    if(fabLine) fabLine.href = GLOBAL_LINE_URL;
+
+    // 結果頁按鈕
+    const btnAction = document.getElementById("btnLineAction");
+    if(btnAction) {
+      btnAction.textContent = `找 ${GLOBAL_NAME} 求救`;
+      btnAction.href = GLOBAL_LINE_URL;
+    }
+  }
+
+  // ============================================
+  // 2. 題庫 (10題)
+  // ============================================
   const questions = [
     { t: "禮拜一早上張開眼睛，你的第一個念頭是？", c: [{n:"還可以，照常出門",s:0},{n:"嘆口氣，覺得又要上班了",s:2},{n:"胸悶、胃痛，甚至想世界毀滅",s:3},{n:"根本起不來，想裝病請假",s:4}] },
     { t: "這份工作對你的「消耗」程度？", c: [{n:"有累有爽，還算平衡",s:0},{n:"雖然累，但睡一覺就好了",s:2},{n:"像被吸乾一樣，下班不想講話",s:3},{n:"我覺得正在慢性死亡，靈魂沒了",s:4}] },
@@ -172,7 +210,7 @@
       div.onclick = () => {
         answers[idx] = opt.s;
         updateUI();
-        // 自動跳下一題邏輯
+        // 自動跳下一題
         setTimeout(() => {
           if(idx < questions.length - 1) {
             idx++;
@@ -228,10 +266,17 @@
       rT.textContent = "生命危險！立刻止損！"; rT.className = "danger";
       rB.textContent = "這已經不是工作問題，是生存問題！再不走會崩潰。"; rL.textContent = "現在、立刻、馬上求救。";
     }
+    
+    // 確保這裡的按鈕文字也是對的
+    updateLinkUI();
+    
+    const uName = document.getElementById("userName").value.trim();
+    if(uName) {
+      document.getElementById("leadEcho").textContent = `${uName}，請直接點擊上方按鈕加 ${GLOBAL_NAME}。`;
+    }
+
     showScreen("screenResult");
   };
-
-  render();
 </script>
 </body>
 </html>
