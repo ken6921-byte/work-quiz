@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#F36C21" />
+  <title>工作痛苦指數｜你的極限到了嗎？</title>
+  <style>
+    :root{
+      --orange:#F36C21;
+      --orange-2:#FF8A3D;
+      --bg:#FFF7F0;
+      --ink:#1F1F1F;
+      --muted:#6B7280;
+      --card:#FFFFFF;
+      --border:#EDE3DA;
+      --shadow: 0 10px 30px rgba(31,31,31,.08);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(243,108,33,.18), transparent 55%), var(--bg);
+      color:var(--ink);
+      line-height:1.5;
+      padding-bottom: 80px; 
+    }
+    .wrap{ max-width: 980px; margin: 0 auto; padding: 22px 16px 40px; }
+    
+    /* 浮動 LINE 按鈕 */
+    .fab-line {
+      position: fixed; bottom: 24px; right: 24px;
+      background: linear-gradient(135deg, #06C755, #00B900);
+      color: white; padding: 14px 24px; border-radius: 50px;
+      box-shadow: 0 10px 25px rgba(6, 199, 85, 0.4);
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 800; z-index: 1000; text-decoration: none;
+    }
+
+    .topbar{ display:flex; align-items:center; justify-content:space-between; padding-bottom: 18px; }
+    .brand{ display:flex; align-items:center; gap:10px; font-weight:800; }
+    .dot{ width:12px; height:12px; border-radius:99px; background: var(--orange); }
+    .pill{ padding:8px 12px; border:1px solid var(--border); border-radius:999px; background: rgba(255,255,255,.65); font-size: 13px; }
+
+    .card{ background: rgba(255,255,255,.88); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; padding: 20px; }
+    h1{ margin:0 0 10px; font-size: 26px; }
+    .sub{ color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+
+    .progress{ height: 10px; background: rgba(31,31,31,.06); border-radius: 99px; overflow:hidden; margin: 12px 0 4px; }
+    .bar{ height:100%; width: 0%; background: linear-gradient(90deg, var(--orange), var(--orange-2)); transition: width .3s; }
+    .progress-meta{ display:flex; justify-content:space-between; font-size: 12px; color: var(--muted); }
+
+    .q-title{ font-size: 19px; font-weight: 800; margin-bottom: 15px; }
+    .choices{ display:grid; gap: 10px; }
+    .choice{
+      display:flex; gap: 12px; border: 1px solid var(--border);
+      background: #fff; border-radius: 16px; padding: 14px; cursor:pointer;
+    }
+    .choice.selected { border-color: var(--orange); background: rgba(243,108,33,.05); }
+    .choice .txt .a{ font-weight: 700; display: block; }
+    .choice .txt .b{ font-size: 12px; color: var(--muted); }
+
+    .actions{ display:flex; justify-content:space-between; gap: 10px; margin-top: 20px; }
+    .btn{ border: 1px solid var(--border); background: #fff; padding: 12px 20px; border-radius: 14px; font-weight: 800; cursor:pointer; }
+    .btn.primary{ background: var(--orange); color: #fff; border: none; }
+    .btn:disabled{ opacity: 0.3; }
+
+    .screen{ display:none; }
+    .screen.active{ display:block; }
+    
+    .result h2.danger { color: #D32F2F; }
+    .result h2.warning { color: #E65100; }
+    .result h2.safe { color: #2E7D32; }
+    .lastline{ margin-top: 20px; padding: 15px; background: #FFF0F0; border-left: 5px solid #D32F2F; font-weight: 900; color: #D32F2F; }
+  </style>
+</head>
+<body>
+
+  <a href="#" id="fabLine" class="fab-line" target="_blank">
+    <span>💬</span><span id="fabText">載入中...</span>
+  </a>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand"><div class="dot"></div>工作痛苦指數</div>
+      <div class="pill" id="metaInfo">10 題精準測驗</div>
+    </div>
+
+    <div class="card">
+      <h1>你的極限到了嗎？</h1>
+      <p class="sub">這是一份殘酷的止損檢測。如果分數爆表，請聽建議：快逃。</p>
+      <div class="progress-meta">
+        <span id="pmLeft">進度 0 / 10</span>
+        <span id="pmRight">準備開始</span>
+      </div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+    </div>
+
+    <div class="card">
+      <div id="screenQuiz" class="screen active">
+        <div id="qTitle" class="q-title"></div>
+        <div id="choices" class="choices"></div>
+        <div class="actions">
+          <button class="btn" id="btnPrev">上一題</button>
+          <button class="btn primary" id="btnNext">下一題</button>
+        </div>
+      </div>
+
+      <div id="screenLead" class="screen">
+        <div class="q-title">測驗完成！結果已生成</div>
+        <p class="sub">留個稱呼，方便稍後提供具體建議（選填）。</p>
+        <input id="userName" type="text" placeholder="怎麼稱呼你？" style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); margin-bottom:15px;">
+        <div class="actions">
+          <button class="btn" id="btnBack">回頭檢查</button>
+          <button class="btn primary" id="btnShowResult">看分析結果</button>
+        </div>
+      </div>
+
+      <div id="screenResult" class="screen result">
+        <h2 id="rTitle"></h2>
+        <p id="rScore" style="font-weight:700;"></p>
+        <div id="rBody"></div>
+        <div id="rLast" class="lastline"></div>
+        <div class="actions" style="margin-top:20px;">
+          <button class="btn" id="btnRestart">重測</button>
+          <a href="#" id="btnLineAction" class="btn primary" style="flex:1; text-align:center;" target="_blank">求救</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // 1. 參數設定
+  const urlParams = new URLSearchParams(window.location.search);
+  const AGENT_NAME = urlParams.get('name') || "Ken";
+  const AGENT_LINE_ID = urlParams.get('line') || "ken6921";
+  const LINE_URL = `https://line.me/ti/p/~${AGENT_LINE_ID}`;
+
+  document.getElementById("fabText").textContent = `${AGENT_NAME} 幫你健檢`;
+  document.getElementById("fabLine").href = LINE_URL;
+  document.getElementById("btnLineAction").href = LINE_URL;
+  document.getElementById("btnLineAction").textContent = `找 ${AGENT_NAME} 求救`;
+
+  // 2. 題庫
+  const questions = [
+    { t: "禮拜一早上張開眼睛，你的第一個念頭是？", c: [{n:"還可以，照常出門",s:0},{n:"嘆口氣，覺得又要上班了",s:2},{n:"胸悶、胃痛，甚至想世界毀滅",s:3},{n:"根本起不來，想裝病請假",s:4}] },
+    { t: "這份工作對你的「消耗」程度？", c: [{n:"有累有爽，還算平衡",s:0},{n:"雖然累，但睡一覺就好了",s:2},{n:"像被吸乾一樣，下班不想講話",s:3},{n:"我覺得正在慢性死亡，靈魂沒了",s:4}] },
+    { t: "關於主管/老闆，你最真實的感受？", c: [{n:"正常人，能溝通",s:0},{n:"有時候很煩，但還能忍受",s:2},{n:"情緒化、沒邏輯、只會壓榨",s:3},{n:"看到他就嘔吐、恐懼、手抖",s:4}] },
+    { t: "如果有獵頭介紹薪水差不多的工作？", c: [{n:"先不要，現在還不錯",s:0},{n:"會好奇聽聽看",s:2},{n:"馬上答應！能離開這裡都好",s:3},{n:"拜託帶我走，降薪也願意",s:4}] },
+    { t: "你的身體最近出現了什麼狀況？", c: [{n:"能吃能睡，很健康",s:0},{n:"肩膀痠痛、偶爾偏頭痛",s:2},{n:"失眠、暴飲暴食、不明疼痛",s:3},{n:"在看身心科、吃藥、常崩潰",s:4}] },
+    { t: "你覺得自己在公司的未來？", c: [{n:"有升遷機會，目標明確",s:0},{n:"走一步算一步",s:2},{n:"一片黑暗，看不到希望",s:3},{n:"不想有未來，只想結束這一切",s:4}] },
+    { t: "公司的同事或氛圍如何？", c: [{n:"大家互相幫忙",s:0},{n:"各做各的，不熟",s:2},{n:"勾心鬥角、背後捅刀",s:3},{n:"宮鬥劇現場，隨時會被害死",s:4}] },
+    { t: "這份工作是否影響了你的私生活？", c: [{n:"切分得很清楚",s:0},{n:"偶爾抱怨一下",s:2},{n:"負面情緒帶回家，對家人發火",s:3},{n:"導致分手、失和或斷絕社交",s:4}] },
+    { t: "你覺得你的付出與回報成正比嗎？", c: [{n:"合理，滿意",s:0},{n:"勉強接受",s:2},{n:"不成正比，我是廉價勞工",s:3},{n:"我是做功德？根本是羞辱",s:4}] },
+    { t: "如果明天不用上班，你的感覺是？", c: [{n:"蠻開心的，可以休息",s:0},{n:"鬆了一口氣",s:2},{n:"像監獄放出來一樣狂喜",s:3},{n:"終於不用面對恐懼了",s:4}] }
+  ];
+
+  let idx = 0;
+  let answers = new Array(questions.length).fill(null);
+
+  function render() {
+    const q = questions[idx];
+    document.getElementById("qTitle").textContent = `第 ${idx+1} 題：${q.t}`;
+    const box = document.getElementById("choices");
+    box.innerHTML = "";
+    
+    q.c.forEach(opt => {
+      const div = document.createElement("div");
+      div.className = `choice ${answers[idx] === opt.s ? 'selected' : ''}`;
+      div.innerHTML = `<div class="txt"><span class="a">${opt.n}</span></div>`;
+      div.onclick = () => {
+        answers[idx] = opt.s;
+        updateUI();
+        // 自動跳下一題邏輯
+        setTimeout(() => {
+          if(idx < questions.length - 1) {
+            idx++;
+            render();
+          } else {
+            showScreen("screenLead");
+          }
+        }, 300);
+      };
+      box.appendChild(div);
+    });
+    updateUI();
+  }
+
+  function updateUI() {
+    const done = answers.filter(a => a !== null).length;
+    const pct = (done / questions.length) * 100;
+    document.getElementById("bar").style.width = pct + "%";
+    document.getElementById("pmLeft").textContent = `進度 ${done} / ${questions.length}`;
+    document.getElementById("btnNext").disabled = answers[idx] === null;
+    document.getElementById("btnPrev").disabled = idx === 0;
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    window.scrollTo(0,0);
+  }
+
+  document.getElementById("btnPrev").onclick = () => { if(idx > 0) { idx--; render(); } };
+  document.getElementById("btnNext").onclick = () => { if(idx < questions.length - 1) { idx++; render(); } else { showScreen("screenLead"); } };
+  document.getElementById("btnBack").onclick = () => showScreen("screenQuiz");
+  document.getElementById("btnRestart").onclick = () => location.reload();
+
+  document.getElementById("btnShowResult").onclick = () => {
+    const total = answers.reduce((a, b) => a + b, 0);
+    const rT = document.getElementById("rTitle");
+    const rB = document.getElementById("rBody");
+    const rL = document.getElementById("rLast");
+    
+    document.getElementById("rScore").textContent = `總分：${total} / 40`;
+    
+    if(total <= 8) {
+      rT.textContent = "職場倖存者"; rT.className = "safe";
+      rB.textContent = "你的環境很健康，目前不需要調整。"; rL.textContent = "保持現狀即可。";
+    } else if(total <= 20) {
+      rT.textContent = "溫水煮青蛙"; rT.className = "warning";
+      rB.textContent = "你已經感到疲勞，雖然還能撐，但建議開始找後路。"; rL.textContent = "別等水滾了才想逃。";
+    } else if(total <= 32) {
+      rT.textContent = "警告！快逃！"; rT.className = "danger";
+      rB.textContent = "這是在消磨你的壽命！環境有毒，請立刻規劃轉職。"; rL.textContent = "你的健康比這份薪水值錢。";
+    } else {
+      rT.textContent = "生命危險！立刻止損！"; rT.className = "danger";
+      rB.textContent = "這已經不是工作問題，是生存問題！再不走會崩潰。"; rL.textContent = "現在、立刻、馬上求救。";
+    }
+    showScreen("screenResult");
+  };
+
+  render();
+</script>
+</body>
+</html>
